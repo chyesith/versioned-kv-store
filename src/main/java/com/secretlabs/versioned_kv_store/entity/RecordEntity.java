@@ -27,7 +27,7 @@ public class RecordEntity extends Auditable {
     private String keyName;
 
     @Column(name = "value", columnDefinition = "Jsonb", nullable = false)
-    private String value;
+    private String recordValue;
 
     @Column(name = "current_version" , nullable = false)
     private Integer currentVersion;
@@ -37,14 +37,14 @@ public class RecordEntity extends Auditable {
     private List<RecordVersion> versions = new ArrayList<>();
 
     public static RecordEntity createNew(String keyName) {
-        RecordEntity record = new RecordEntity();
-        record.keyName = keyName;
-        record.currentVersion =1;
-        return record;
+        RecordEntity recordEntity = new RecordEntity();
+        recordEntity.keyName = keyName;
+        recordEntity.currentVersion =1;
+        return recordEntity;
     }
 
     public void updateValue(String newValue) {
-        this.value = newValue;
+        this.recordValue = newValue;
     }
 
     public int incrementVersion() {

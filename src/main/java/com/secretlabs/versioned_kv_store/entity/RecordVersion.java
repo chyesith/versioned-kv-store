@@ -34,13 +34,13 @@ public class RecordVersion extends Auditable {
     private Integer version;
 
     @Column(name = "value" , updatable = false , nullable = false , columnDefinition = "TEXT")
-    private String value;
+    private String recordValue;
 
-    public static RecordVersion of(RecordEntity record , int version , String value ) {
+    public static RecordVersion of(RecordEntity recordEntity , int version , String value ) {
         RecordVersion recordVersion = new RecordVersion();
-        recordVersion.recordEntity = record;
+        recordVersion.recordEntity = recordEntity;
         recordVersion.version = version;
-        recordVersion.value = value;
+        recordVersion.recordValue = value;
         return recordVersion;
     }
 
