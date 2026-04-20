@@ -64,4 +64,19 @@ public class RecordEntityTest {
             assertThat(version.getRecordValue()).isEqualTo("{\"data\":\"test\"}");
         }
     }
+
+    @Nested
+    @DisplayName("updateValue()")
+    class UpdateValue {
+
+        @Test
+        @DisplayName("should change the record value")
+        void shouldUpdateValue() {
+            RecordEntity entity = RecordEntity.createNew("my-key");
+            String newValue = "{\"status\": \"updated\"}";
+
+            entity.updateValue(newValue);
+            assertThat(entity.getRecordValue()).isEqualTo(newValue);
+        }
+    }
 }
