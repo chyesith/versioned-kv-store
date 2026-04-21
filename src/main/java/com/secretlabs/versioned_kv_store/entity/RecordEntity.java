@@ -26,7 +26,7 @@ public class RecordEntity extends Auditable {
     @Column(name = "key_name", nullable = false)
     private String keyName;
 
-    @JdbcTypeCode(SqlTypes.JSON)
+
     @Column(name = "value", columnDefinition = "TEXT", nullable = false)
     private String recordValue;
 
@@ -37,11 +37,16 @@ public class RecordEntity extends Auditable {
     @OrderBy("version ASC")
     private List<RecordVersion> versions = new ArrayList<>();
 
-    public static RecordEntity createNew(String keyName) {
+    public static RecordEntity createNew(String keyName ,String recordValue ) {
         RecordEntity recordEntity = new RecordEntity();
         recordEntity.keyName = keyName;
+        recordEntity.setRecordValue(recordValue);
         recordEntity.currentVersion =1;
         return recordEntity;
+    }
+
+    public static RecordEntity createNew(String keyName) {
+        return createNew(keyName, "{}");
     }
 
     public void updateValue(String newValue) {
