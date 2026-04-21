@@ -9,6 +9,7 @@ import com.secretlabs.versioned_kv_store.repository.RecordRepository;
 import com.secretlabs.versioned_kv_store.repository.RecordVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,12 +28,22 @@ public class KvStoreServiceImpl implements KvStoreService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public KvStoreResponse upsert(String keyName, String value) {
         log.info("Upserting key='{}'", keyName);
-        RecordEntity recordEntity = recordRepository
-                .findByKeyNameForUpdate(keyName)
-                .orElseGet(() -> {
-                    RecordEntity newRecord = RecordEntity.createNew(keyName , value);
-                    return recordRepository.save(newRecord);
-                });
+        RecordEntity recordEntity;
+
+        try {
+            recordEntity = recordRepository
+                    .findByKeyNameForUpdate(keyName)
+                    .orElseGet(() -> {
+                        RecordEntity newRecord = RecordEntity.createNew(keyName, value);
+                        return recordRepository.save(newRecord);
+                    });
+        } catch (DataIntegrityViolationException ex) {
+            log.warn("race on first insert for key='{}', retrying lock", keyName);
+            recordEntity = recordRepository
+                    .findByKeyNameForUpdate(keyName)
+                    .orElseThrow(() -> new KeyNotFoundException(keyName));
+        }
+
 
         int version;
         boolean isFirstVersion = recordVersionRepository

@@ -9,6 +9,11 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
+    open-in-view: false
+  servlet:
+    multipart:
+      max-request-size: 1MB
+      max-file-size: 1MB
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
 
