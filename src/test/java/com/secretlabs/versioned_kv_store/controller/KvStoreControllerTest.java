@@ -148,11 +148,12 @@ public class KvStoreControllerTest {
         @Test
         @DisplayName("should return 404 when no version exists at timestamp")
         void returns404WhenNoVersionAtTimestamp() throws Exception {
-            when(kvStoreService.getAtTimestamp("mykey", 0L))
-                    .thenThrow(new NoVersionAtTimestampException("mykey", 0L));
+            long fakeTimestamp = 123456789L;
+            when(kvStoreService.getAtTimestamp("mykey", fakeTimestamp))
+                    .thenThrow(new NoVersionAtTimestampException("mykey", fakeTimestamp));
 
             mockMvc.perform(get("/kvstore/v1/mykey")
-                            .param("timestamp", "0"))
+                            .param("timestamp", String.valueOf(fakeTimestamp)))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
         }
