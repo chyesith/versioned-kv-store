@@ -120,3 +120,13 @@ jobs:
           min-coverage-changed-files: 70
           title: Code Coverage Report
           update-comment: true
+    deploy:
+      name: Deploy to Render
+      needs: build
+      runs-on: ubuntu-latest
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      steps:
+        - name: Trigger Render Deployment
+          run: |
+            curl "${{ secrets.RENDER_DEPLOY_HOOK }}"
+            echo "Deployment hook triggered successfully!"
