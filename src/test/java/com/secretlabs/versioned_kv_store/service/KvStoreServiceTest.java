@@ -15,9 +15,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -47,7 +48,7 @@ public class KvStoreServiceTest {
 
             when(recordRepository.findByKeyNameForUpdate("mykey"))
                     .thenReturn(Optional.empty());
-            when(recordRepository.save(any(RecordEntity.class)))
+            when(recordRepository.saveAndFlush(any(RecordEntity.class)))
                     .thenReturn(savedEntity);
             when(recordVersionRepository.findLatestRecordById(any()))
                     .thenReturn(Optional.empty());
@@ -58,7 +59,7 @@ public class KvStoreServiceTest {
 
             assertThat(response.version()).isEqualTo(1);
             assertThat(response.key()).isEqualTo("mykey");
-            verify(recordRepository, times(1)).save(any(RecordEntity.class));
+            verify(recordRepository, times(1)).saveAndFlush(any(RecordEntity.class));
             verify(recordVersionRepository, times(1)).save(any(RecordVersion.class));
         }
 
@@ -167,6 +168,51 @@ public class KvStoreServiceTest {
                     .isInstanceOf(NoVersionAtTimestampException.class)
                     .hasMessageContaining("mykey")
                     .hasMessageContaining("0");
+        }
+    }
+
+    @Nested
+    @DisplayName("getAllLatest()")
+    class GetAllLatest {
+
+        @Test
+        @DisplayName("should return list of KvStoreResponse for all latest versions")
+        void returnsAllLatestVersions() {
+
+            RecordEntity entity1 = RecordEntity.createNew("key1", "value1");
+            RecordVersion version1 = RecordVersion.of(entity1, 1, "value1");
+
+            RecordEntity entity2 = RecordEntity.createNew("key2", "value2");
+            RecordVersion version2 = RecordVersion.of(entity2, 2, "value2");
+
+            when(recordVersionRepository.findAllLatestVersions())
+                    .thenReturn(List.of(version1, version2));
+
+            List<KvStoreResponse> responses = kvStoreService.getAllLatest();
+
+            assertThat(responses).hasSize(2);
+
+            assertThat(responses.get(0).key()).isEqualTo("key1");
+            assertThat(responses.get(0).value()).isEqualTo("value1");
+            assertThat(responses.get(0).version()).isEqualTo(1);
+
+            assertThat(responses.get(1).key()).isEqualTo("key2");
+            assertThat(responses.get(1).value()).isEqualTo("value2");
+            assertThat(responses.get(1).version()).isEqualTo(2);
+
+
+            verify(recordVersionRepository, times(1)).findAllLatestVersions();
+        }
+
+        @Test
+        @DisplayName("should return empty list when no records exist")
+        void returnsEmptyListWhenNoRecords() {
+            when(recordVersionRepository.findAllLatestVersions())
+                    .thenReturn(List.of());
+
+            List<KvStoreResponse> responses = kvStoreService.getAllLatest();
+
+            assertThat(responses).isEmpty();
         }
     }
 }

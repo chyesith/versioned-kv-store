@@ -9,9 +9,14 @@ import com.secretlabs.versioned_kv_store.repository.RecordRepository;
 import com.secretlabs.versioned_kv_store.repository.RecordVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -27,12 +32,22 @@ public class KvStoreServiceImpl implements KvStoreService {
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public KvStoreResponse upsert(String keyName, String value) {
         log.info("Upserting key='{}'", keyName);
-        RecordEntity recordEntity = recordRepository
-                .findByKeyNameForUpdate(keyName)
-                .orElseGet(() -> {
-                    RecordEntity newRecord = RecordEntity.createNew(keyName , value);
-                    return recordRepository.save(newRecord);
-                });
+        RecordEntity recordEntity;
+        try {
+            recordEntity = recordRepository
+                    .findByKeyNameForUpdate(keyName)
+                    .orElseGet(() -> {
+                        RecordEntity newRecord = RecordEntity.createNew(keyName, value);
+                        return recordRepository.saveAndFlush(newRecord);
+                    });
+        } catch (DataIntegrityViolationException ex) {
+            // Two threads tried to create the same key simultaneously.
+            // One succeeded — retry the lock on the now-existing row.
+            log.warn("Race on first insert for key='{}', retrying lock", keyName);
+            recordEntity = recordRepository
+                    .findByKeyNameForUpdate(keyName)
+                    .orElseThrow(() -> new KeyNotFoundException(keyName));
+        }
 
         int version;
         boolean isFirstVersion = recordVersionRepository
@@ -80,6 +95,17 @@ public class KvStoreServiceImpl implements KvStoreService {
                         new NoVersionAtTimestampException(keyName, timestamp));
 
         return KvStoreResponse.from(keyName, recordVersion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<KvStoreResponse> getAllLatest() {
+       return recordVersionRepository.findAllLatestVersions().stream()
+                .map(version -> KvStoreResponse.from(
+                        version.getRecordEntity().getKeyName(),
+                        version
+                ))
+                .toList();
     }
 
 }
