@@ -13,20 +13,6 @@ jobs:
     name: Build-Test-Analyze
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: kvstore
-          POSTGRES_USER: dev_user
-          POSTGRES_PASSWORD: dev_password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -50,9 +36,6 @@ jobs:
 
       - name: Build, test and analyze
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/kvstore
-          SPRING_DATASOURCE_USERNAME: dev_user
-          SPRING_DATASOURCE_PASSWORD: dev_password
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: >-
           ./mvnw -B verify
