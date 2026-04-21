@@ -47,7 +47,7 @@ public class KvStoreServiceTest {
 
             when(recordRepository.findByKeyNameForUpdate("mykey"))
                     .thenReturn(Optional.empty());
-            when(recordRepository.save(any(RecordEntity.class)))
+            when(recordRepository.saveAndFlush(any(RecordEntity.class)))
                     .thenReturn(savedEntity);
             when(recordVersionRepository.findLatestRecordById(any()))
                     .thenReturn(Optional.empty());
@@ -58,7 +58,7 @@ public class KvStoreServiceTest {
 
             assertThat(response.version()).isEqualTo(1);
             assertThat(response.key()).isEqualTo("mykey");
-            verify(recordRepository, times(1)).save(any(RecordEntity.class));
+            verify(recordRepository, times(1)).saveAndFlush(any(RecordEntity.class));
             verify(recordVersionRepository, times(1)).save(any(RecordVersion.class));
         }
 

@@ -19,6 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -148,13 +150,33 @@ public class KvStoreControllerTest {
         @Test
         @DisplayName("should return 404 when no version exists at timestamp")
         void returns404WhenNoVersionAtTimestamp() throws Exception {
-            when(kvStoreService.getAtTimestamp("mykey", 0L))
-                    .thenThrow(new NoVersionAtTimestampException("mykey", 0L));
+            long fakeTimestamp = 123456789L;
+            when(kvStoreService.getAtTimestamp("mykey", fakeTimestamp))
+                    .thenThrow(new NoVersionAtTimestampException("mykey", fakeTimestamp));
 
             mockMvc.perform(get("/kvstore/v1/mykey")
-                            .param("timestamp", "0"))
+                            .param("timestamp", String.valueOf(fakeTimestamp)))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.status").value(404));
+        }
+
+        @Test
+        @DisplayName("GET /get_all_records returns 200 and list of records")
+        void getAllRecordsReturnsOk() throws Exception {
+
+            List<KvStoreResponse> mockData = List.of(
+                    new KvStoreResponse("key1", "value1", 1 ,3L),
+                    new KvStoreResponse("key2", "value1", 2 ,5L)
+            );
+
+            when(kvStoreService.getAllLatest()).thenReturn(mockData);
+
+            mockMvc.perform(get("/kvstore/v1/get_all_records")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.size()").value(2))
+                    .andExpect(jsonPath("$[0].key").value("key1"))
+                    .andExpect(jsonPath("$[1].key").value("key2"));
         }
     }
 

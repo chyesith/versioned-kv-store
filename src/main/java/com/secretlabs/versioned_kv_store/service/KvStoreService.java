@@ -12,4 +12,6 @@ public interface KvStoreService {
 
     KvStoreResponse getAtTimestamp(String keyName, Long timestamp);
 
+    List<KvStoreResponse> getAllLatest();
+
 }

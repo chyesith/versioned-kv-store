@@ -8,10 +8,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -50,12 +53,24 @@ public class KvStoreController {
     @GetMapping("/{key}")
     public ResponseEntity<KvStoreResponse> get(
             @PathVariable String key,
+            @Positive(message = "Timestamp must be a positive number")
             @RequestParam(required = false) Long timestamp) {
         log.debug("GET /object/{} timestamp={}", key, timestamp);
         KvStoreResponse response = (timestamp != null)
                 ? kvStoreService.getAtTimestamp(key, timestamp)
                 : kvStoreService.getLatest(key);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get all records",
+            description = "Returns a list of all keys, their latest values, and current versions")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List retrieved successfully")
+    })
+    @GetMapping("/get_all_records")
+    public ResponseEntity<List<KvStoreResponse>> getAllRecords() {
+        log.debug("GET /object/get_all_records");
+        return ResponseEntity.ok(kvStoreService.getAllLatest());
     }
 
 }
