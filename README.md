@@ -1,6 +1,6 @@
 # Versioned Key-Value Store
 
-[![CI](https://github.com/chyesith/versioned-kv-store/actions/workflows/ci.yml/badge.svg)](https://github.com/chyesith/versioned-kv-store/actions/workflows/ci.yml)
+[![CI](https://github.com/chyesith/versioned-kv-store/actions/workflows/pipeline.yml/badge.svg)](https://github.com/chyesith/versioned-kv-store/actions/workflows/ci.yml)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=versioned-kv-store&metric=alert_status)](https://sonarcloud.io/dashboard?id=versioned-kv-store)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=versioned-kv-store&metric=coverage)](https://sonarcloud.io/dashboard?id=versioned-kv-store)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=versioned-kv-store&metric=bugs)](https://sonarcloud.io/dashboard?id=versioned-kv-store)
