@@ -13,6 +13,8 @@ jobs:
     name: Build-Test-Analyze
     runs-on: ubuntu-latest
 
+    # NOTE: We removed the 'services' block entirely.
+    # Testcontainers in your Java code will spin up the database automatically.
 
     steps:
       - name: Checkout repository
@@ -36,7 +38,10 @@ jobs:
 
       - name: Build, test and analyze
         env:
+          # ONLY the Sonar token is needed here.
+          # Removing SPRING_DATASOURCE_URL allows Testcontainers to work correctly.
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >-
           ./mvnw -B verify
           org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar
@@ -44,7 +49,6 @@ jobs:
           -Dsonar.organization=chyesith
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-
 
       - name: Upload JaCoCo HTML report
         uses: actions/upload-artifact@v4
@@ -59,12 +63,10 @@ jobs:
         run: |
           echo "## JaCoCo Coverage Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
           if [ ! -f target/site/jacoco/jacoco.xml ]; then
             echo ":warning: jacoco.xml not found — verify phase may have failed" >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
-
           extract() {
             TYPE=$1
             grep -o "type=\"$TYPE\"[^/]*/>" target/site/jacoco/jacoco.xml | \
@@ -75,13 +77,11 @@ jobs:
               else print "0.0"
             }'
           }
-
           INSTRUCTION=$(extract INSTRUCTION)
           BRANCH=$(extract BRANCH)
           LINE=$(extract LINE)
           METHOD=$(extract METHOD)
           CLASS=$(extract CLASS)
-
           echo "| Metric | Coverage |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|:--------:|" >> $GITHUB_STEP_SUMMARY
           echo "| Lines | ${LINE}% |" >> $GITHUB_STEP_SUMMARY
@@ -91,7 +91,6 @@ jobs:
           echo "| Instructions | ${INSTRUCTION}% |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "> Full HTML report available in the **jacoco-html-report** artifact above" >> $GITHUB_STEP_SUMMARY
-
 
       - name: Post coverage comment on PR
         uses: madrapps/jacoco-report@v1.7.1
