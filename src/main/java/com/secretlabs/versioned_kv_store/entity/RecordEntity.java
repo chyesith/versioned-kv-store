@@ -2,10 +2,9 @@ package com.secretlabs.versioned_kv_store.entity;
 
 import com.secretlabs.versioned_kv_store.audit.Auditable;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +14,7 @@ import java.util.List;
         @Index(name = "idx_record_key_name" ,columnList = "key_name", unique = true)
 })
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(exclude = "versions")
 public class RecordEntity extends Auditable {
@@ -26,7 +26,8 @@ public class RecordEntity extends Auditable {
     @Column(name = "key_name", nullable = false)
     private String keyName;
 
-    @Column(name = "value", columnDefinition = "Jsonb", nullable = false)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "value", columnDefinition = "TEXT", nullable = false)
     private String recordValue;
 
     @Column(name = "current_version" , nullable = false)
