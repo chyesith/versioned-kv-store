@@ -58,6 +58,7 @@ public class KvStoreServiceImpl implements KvStoreService {
             version = 1;
         } else {
             version = recordEntity.incrementVersion();
+            recordEntity.setRecordValue(value);
             recordRepository.save(recordEntity);
         }
 
