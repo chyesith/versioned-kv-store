@@ -22,7 +22,7 @@ public interface RecordVersionRepository extends JpaRepository<RecordVersion , L
         SELECT v FROM RecordVersion v
         WHERE v.recordEntity.id = :recordId
           AND v.createdAt <= :timestamp
-        ORDER BY v.createdAt DESC
+        ORDER BY v.version DESC
         LIMIT 1
         """)
     Optional<RecordVersion> findByRecordIdAtTimestamp(
